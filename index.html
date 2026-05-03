@@ -1,0 +1,2138 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>RAW</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;500;700&family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0a; --bg-elev: #141414; --bg-card: #1a1a1a;
+    --border: #262626; --border-bright: #333;
+    --text: #f5f5f5; --text-dim: #888; --text-faint: #555;
+    --accent: #d4ff3a; --accent-dim: #a8cc2e;
+    --coral: #ff6b5b; --warning: #ffb547;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #0a0a0a; }
+  html { color-scheme: dark; }
+  body {
+    font-family: 'Pretendard', -apple-system, sans-serif;
+    background: var(--bg); color: var(--text);
+    min-height: 100vh; overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    opacity: 0.03; pointer-events: none; z-index: 1;
+  }
+  .app { max-width: 480px; margin: 0 auto; min-height: 100vh; position: relative; z-index: 2; background: var(--bg); }
+  .page { display: none; background: var(--bg); min-height: 100vh; }
+  .page.active { display: block; animation: fadeIn 0.2s; }
+
+  /* 로그인 */
+  .login-screen { min-height: 100vh; display: flex; flex-direction: column; justify-content: center; padding: 40px 28px; position: relative; }
+  .login-screen::after { content: ''; position: absolute; top: 10%; left: -20%; width: 140%; height: 200px; background: radial-gradient(ellipse at center, rgba(212,255,58,0.08) 0%, transparent 70%); pointer-events: none; }
+  .login-logo { font-family: 'Bebas Neue', sans-serif; font-size: 96px; line-height: 0.9; letter-spacing: 0.04em; margin-bottom: 8px; position: relative; }
+  .login-logo .dot { color: var(--accent); }
+  .login-tagline { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); letter-spacing: 0.2em; margin-bottom: 60px; }
+  .login-form { position: relative; }
+  .login-error { background: rgba(255,107,91,0.1); border: 1px solid var(--coral); border-radius: 10px; padding: 10px 14px; font-size: 12px; color: var(--coral); margin-bottom: 16px; display: none; }
+  .login-error.show { display: block; }
+  .login-link { text-align: center; margin-top: 18px; font-size: 12px; color: var(--text-dim); }
+  .login-link a { color: var(--accent); text-decoration: none; cursor: pointer; font-weight: 600; }
+
+  /* 헤더 */
+  .header { padding: 24px 20px 16px; border-bottom: 1px solid var(--border); background: rgba(10,10,10,0.85); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(12px); }
+  .header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .logo { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 0.06em; line-height: 1; display: flex; align-items: baseline; gap: 6px; }
+  .logo .dot { color: var(--accent); }
+  .logo-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-faint); letter-spacing: 0.15em; margin-left: 8px; align-self: center; }
+  .header-actions { display: flex; gap: 8px; }
+  .icon-btn { width: 38px; height: 38px; border: 1px solid var(--border-bright); background: var(--bg-elev); border-radius: 10px; color: var(--text); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .user-chip { display: flex; align-items: center; gap: 8px; padding: 6px 10px 6px 6px; background: var(--bg-elev); border: 1px solid var(--border-bright); border-radius: 20px; cursor: pointer; transition: all 0.15s; }
+  .user-chip:hover { border-color: var(--accent); }
+  .user-chip-avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--bg); font-weight: 700; font-size: 11px; display: flex; align-items: center; justify-content: center; }
+  .user-chip-name { font-size: 12px; font-weight: 600; }
+
+  .month-nav { display: flex; align-items: center; justify-content: space-between; }
+  .month-title { font-family: 'Bebas Neue', sans-serif; font-size: 36px; letter-spacing: 0.02em; line-height: 1; }
+  .month-title .year { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-dim); margin-left: 10px; vertical-align: middle; }
+  .month-arrows { display: flex; gap: 4px; }
+  .arrow-btn { width: 32px; height: 32px; border: none; background: transparent; color: var(--text-dim); cursor: pointer; border-radius: 8px; font-size: 18px; transition: all 0.15s; }
+  .arrow-btn:hover { background: var(--bg-elev); color: var(--accent); }
+
+  /* 뷰 토글 */
+  .view-toggle { display: flex; gap: 4px; padding: 12px 20px 0; border-bottom: 1px solid var(--border); background: rgba(10,10,10,0.85); position: sticky; top: 119px; z-index: 9; backdrop-filter: blur(12px); }
+  .view-btn { padding: 10px 14px; margin-right: 4px; border: none; background: transparent; color: var(--text-faint); font-size: 12px; font-weight: 600; cursor: pointer; position: relative; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.1em; }
+  .view-btn.active { color: var(--text); }
+  .view-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 8px; right: 8px; height: 2px; background: var(--accent); }
+
+  /* 월별 캘린더 */
+  .calendar { padding: 20px; }
+  .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 8px; }
+  .weekday { text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-faint); padding: 8px 0; letter-spacing: 0.1em; }
+  .weekday.sun { color: var(--coral); }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .day { aspect-ratio: 1; border: 1px solid transparent; border-radius: 10px; padding: 6px; cursor: pointer; position: relative; display: flex; flex-direction: column; transition: all 0.15s; }
+  .day:hover { background: var(--bg-elev); border-color: var(--border-bright); }
+  .day.other-month { opacity: 0.25; }
+  .day.today { background: var(--bg-elev); border-color: var(--accent); }
+  .day.today .num { color: var(--accent); font-weight: 700; }
+  .day.selected { background: #2d2d2d; border-color: #555; }
+  .day.selected .num { color: #fff; font-weight: 700; }
+  .day.selected.today { border-color: var(--accent); }
+  .day.selected.today .num { color: var(--accent); }
+  .day .num { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; }
+  .day.sun .num { color: var(--coral); }
+  .events-dots { display: flex; gap: 3px; margin-top: auto; flex-wrap: wrap; }
+  .ev-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .day.has-birthday::after { content: '🎂'; position: absolute; top: 4px; right: 4px; font-size: 10px; }
+
+  /* 주간 뷰 */
+  .week-view { padding: 16px 20px; }
+  .week-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 14px; }
+  .week-day { text-align: center; padding: 10px 4px; border-radius: 10px; cursor: pointer; transition: all 0.15s; border: 1px solid transparent; }
+  .week-day:hover { background: var(--bg-elev); }
+  .week-day.today { border-color: var(--accent); }
+  .week-day.today .wd-num { color: var(--accent); }
+  .week-day.selected { background: #2d2d2d; border-color: #555; }
+  .week-day.selected .wd-name, .week-day.selected .wd-num { color: #fff; font-weight: 700; }
+  .week-day.selected.today { border-color: var(--accent); }
+  .week-day.selected.today .wd-num { color: var(--accent); }
+  .wd-name { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-faint); letter-spacing: 0.1em; margin-bottom: 4px; }
+  .wd-name.sun { color: var(--coral); }
+  .wd-num { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 600; }
+  .week-events { display: flex; gap: 2px; justify-content: center; margin-top: 4px; min-height: 6px; }
+
+  /* 일별 뷰 */
+  .day-view { padding: 16px 20px; }
+  .day-view-header { text-align: center; padding: 16px 0 24px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+  .day-view-date { font-family: 'Bebas Neue', sans-serif; font-size: 56px; line-height: 1; margin-bottom: 6px; }
+  .day-view-month { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-dim); letter-spacing: 0.15em; }
+  .day-view-day { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-faint); margin-top: 4px; letter-spacing: 0.2em; }
+
+  .schedule-section { padding: 8px 20px 100px; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 12px; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: 18px; letter-spacing: 0.05em; }
+  .section-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); }
+
+  .event-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 10px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+  .event-card:hover { border-color: var(--border-bright); transform: translateY(-1px); }
+  .event-card .type-bar { position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .event-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .event-type { font-family: 'JetBrains Mono', monospace; font-size: 9px; font-weight: 700; letter-spacing: 0.15em; padding: 3px 8px; border-radius: 4px; }
+  .event-time { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--text-dim); }
+  .event-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+  .event-meta { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text-dim); }
+  .event-meta-row { display: flex; align-items: center; gap: 8px; }
+  .event-meta-row svg { flex-shrink: 0; }
+  .attendance { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .avatars { display: flex; }
+  .avatar { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--bg-card); margin-left: -6px; color: var(--bg); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .avatar:first-child { margin-left: 0; }
+  .avatar.absent { background: var(--bg-elev) !important; color: var(--text-faint); border-color: var(--border); }
+  .avatar.pending { opacity: 0.45; border-style: dashed; border-color: var(--warning); }
+  .attendance-text { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); margin-left: auto; }
+  .attendance-text strong { color: var(--accent); }
+
+  .fab { position: fixed; bottom: 80px; right: 50%; transform: translateX(212px); width: 52px; height: 52px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; font-size: 26px; cursor: pointer; box-shadow: 0 8px 24px rgba(212,255,58,0.3); z-index: 20; transition: all 0.2s; }
+  .fab:hover { transform: translateX(212px) scale(1.05); }
+  @media (max-width: 480px) { .fab { right: 20px; transform: none; } .fab:hover { transform: scale(1.05); } }
+
+  .bottom-nav { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--border); display: flex; padding: 8px 0 16px; z-index: 15; }
+  .nav-item { flex: 1; border: none; background: transparent; color: var(--text-faint); padding: 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.05em; transition: color 0.15s; position: relative; }
+  .nav-item.active { color: var(--accent); }
+  .nav-item:hover { color: var(--text); }
+  .nav-item.has-notif::before { content: ''; position: absolute; top: 6px; right: calc(50% - 16px); width: 6px; height: 6px; background: var(--coral); border-radius: 50%; }
+
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); z-index: 100; display: none; align-items: flex-end; justify-content: center; }
+  .modal-bg.active { display: flex; }
+  .modal-bg.center { align-items: center; }
+  .modal { background: var(--bg-elev); width: 100%; max-width: 480px; max-height: 90vh; border-radius: 24px 24px 0 0; padding: 8px 20px 24px; overflow-y: auto; border-top: 1px solid var(--border-bright); animation: slideUp 0.3s ease; }
+  .modal-bg.center .modal { border-radius: 20px; max-height: 85vh; margin: 20px; border: 1px solid var(--border-bright); padding: 20px; }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .modal-handle { width: 36px; height: 4px; background: var(--border-bright); border-radius: 2px; margin: 0 auto 16px; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+  .modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 24px; letter-spacing: 0.05em; }
+  .close-btn { background: none; border: none; color: var(--text-dim); font-size: 20px; cursor: pointer; padding: 4px; }
+
+  .form-group { margin-bottom: 18px; }
+  .form-label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.1em; }
+  .form-input, .form-select, .form-textarea { width: 100%; background: var(--bg); border: 1px solid var(--border-bright); border-radius: 10px; padding: 12px 14px; color: var(--text); font-family: inherit; font-size: 14px; transition: border-color 0.15s; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--accent); }
+  .form-textarea { resize: vertical; min-height: 70px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .member-toggle { display: flex; flex-wrap: wrap; gap: 6px; }
+  .member-chip {
+    padding: 7px 14px;
+    background: var(--bg);
+    border: 1.5px solid var(--border-bright);
+    border-radius: 20px;
+    color: var(--text-faint);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .member-chip .chip-icon {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  /* 필수: 코랄 채워진 원 */
+  .member-chip.required {
+    background: rgba(255,107,91,0.12);
+    border-color: var(--coral);
+    color: var(--coral);
+  }
+  .member-chip.required .chip-icon {
+    background: var(--coral);
+    color: #fff;
+  }
+  /* 선택: 라임 빈 원 (테두리만) */
+  .member-chip.optional {
+    background: rgba(212,255,58,0.08);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .member-chip.optional .chip-icon {
+    background: transparent;
+    border: 1.5px solid var(--accent);
+  }
+  /* 미참여: 회색 X */
+  .member-chip.none {
+    background: var(--bg);
+    border-color: var(--border-bright);
+    border-style: dashed;
+    color: var(--text-faint);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-faint);
+  }
+  .member-chip.none .chip-icon {
+    background: transparent;
+    color: var(--text-faint);
+  }
+
+  .legend-row {
+    display: flex; gap: 14px; margin-top: 10px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 0.05em;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 700;
+  }
+  .legend-dot.req { background: var(--coral); color: #fff; }
+  .legend-dot.opt { background: transparent; border: 1.5px solid var(--accent); color: var(--accent); }
+  .legend-dot.no { background: transparent; border: 1px dashed var(--text-faint); color: var(--text-faint); }
+  .legend-item.req-text { color: var(--coral); }
+  .legend-item.opt-text { color: var(--accent); }
+  .legend-item.no-text { color: var(--text-faint); }
+
+  .submit-btn { width: 100%; background: var(--accent); color: var(--bg); border: none; border-radius: 12px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: opacity 0.15s; font-family: inherit; }
+  .submit-btn:hover { opacity: 0.9; }
+  .ghost-btn { width: 100%; background: transparent; color: var(--text); border: 1px solid var(--border-bright); border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px; font-family: inherit; }
+  .ghost-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .danger-btn { width: 100%; background: transparent; color: var(--coral); border: 1px solid var(--coral); border-radius: 12px; padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 8px; font-family: inherit; }
+  .danger-btn:hover { background: rgba(255,107,91,0.1); }
+
+  .members-section { padding: 0 20px 100px; }
+  .pending-banner { background: linear-gradient(135deg, rgba(255,181,71,0.15), rgba(255,107,91,0.1)); border: 1px solid var(--warning); border-radius: 12px; padding: 14px; margin: 16px 0; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+  .pending-banner.hidden { display: none; }
+  .pending-banner-icon { width: 36px; height: 36px; background: var(--warning); color: var(--bg); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; }
+  .pending-banner-text { flex: 1; font-size: 13px; }
+  .pending-banner-text strong { color: var(--warning); }
+
+  .member-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; margin-bottom: 8px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: border-color 0.15s; }
+  .member-card:hover { border-color: var(--border-bright); }
+  .member-avatar-lg { width: 44px; height: 44px; border-radius: 50%; color: var(--bg); font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+  .member-info { flex: 1; min-width: 0; }
+  .member-name { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .role-tag { font-family: 'JetBrains Mono', monospace; font-size: 8px; letter-spacing: 0.1em; padding: 2px 6px; border-radius: 3px; font-weight: 700; }
+  .role-tag.leader { background: var(--accent); color: var(--bg); }
+  .role-tag.admin { background: var(--warning); color: var(--bg); }
+  .member-meta { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); margin-top: 4px; }
+  .member-genres { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+  .genre-tag { font-size: 10px; padding: 2px 8px; background: var(--bg); border: 1px solid var(--border-bright); border-radius: 10px; color: var(--text-dim); }
+
+  .approval-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; margin-bottom: 10px; }
+  .approval-info { margin-bottom: 14px; }
+  .approval-name { font-size: 16px; font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+  .approval-color-dot { width: 14px; height: 14px; border-radius: 50%; }
+  .approval-detail { font-size: 12px; color: var(--text-dim); margin-bottom: 2px; }
+  .approval-actions { display: flex; gap: 8px; }
+  .btn-approve, .btn-reject { flex: 1; border: none; border-radius: 10px; padding: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .btn-approve { background: var(--accent); color: var(--bg); }
+  .btn-reject { background: var(--bg-elev); color: var(--coral); border: 1px solid var(--coral); }
+
+  .empty { text-align: center; padding: 40px 20px; color: var(--text-faint); }
+  .empty-icon { font-size: 36px; margin-bottom: 8px; opacity: 0.4; }
+  .empty-text { font-size: 13px; }
+
+  .page.active { animation: fadeIn 0.2s; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: var(--accent); color: var(--bg); padding: 12px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; z-index: 200; opacity: 0; transition: opacity 0.3s, transform 0.3s; pointer-events: none; text-align: center; max-width: 90%; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(-8px); }
+
+  .admin-section-title { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-dim); letter-spacing: 0.15em; margin: 24px 0 10px; padding-left: 4px; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border-bright); border-radius: 10px; margin-bottom: 8px; }
+  .toggle-info { flex: 1; }
+  .toggle-info strong { font-size: 13px; display: block; margin-bottom: 2px; }
+  .toggle-info span { font-size: 11px; color: var(--text-dim); }
+  .toggle { width: 44px; height: 24px; background: var(--border-bright); border-radius: 12px; position: relative; cursor: pointer; transition: background 0.2s; flex-shrink: 0; }
+  .toggle::after { content: ''; position: absolute; width: 18px; height: 18px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
+  .toggle.on { background: var(--accent); }
+  .toggle.on::after { left: 23px; }
+
+  /* 드롭다운 */
+  .dropdown { position: relative; }
+  .dropdown-trigger { width: 100%; background: var(--bg); border: 1px solid var(--border-bright); border-radius: 10px; padding: 12px 14px; color: var(--text); font-family: inherit; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; transition: border-color 0.15s; text-align: left; }
+  .dropdown.open .dropdown-trigger { border-color: var(--accent); }
+  .dropdown-value { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  .dropdown-value.placeholder { color: var(--text-faint); }
+  .dropdown-arrow { color: var(--text-dim); transition: transform 0.2s; flex-shrink: 0; margin-left: 8px; }
+  .dropdown.open .dropdown-arrow { transform: rotate(180deg); color: var(--accent); }
+  .dropdown-menu { position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: var(--bg-elev); border: 1px solid var(--border-bright); border-radius: 10px; max-height: 240px; overflow-y: auto; z-index: 50; display: none; box-shadow: 0 12px 32px rgba(0,0,0,0.5); }
+  .dropdown.open .dropdown-menu { display: block; animation: dropIn 0.15s ease; }
+  @keyframes dropIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  .dropdown-item { padding: 12px 14px; cursor: pointer; font-size: 14px; display: flex; align-items: center; gap: 10px; transition: background 0.1s; border-bottom: 1px solid var(--border); }
+  .dropdown-item:last-child { border-bottom: none; }
+  .dropdown-item:hover { background: var(--bg-card); }
+  .dropdown-item.active { color: var(--accent); }
+  .dropdown-item .check { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid var(--border-bright); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .dropdown-item.active .check { border-color: var(--accent); background: var(--accent); }
+  .dropdown-item.active .check::after { content: ''; width: 8px; height: 4px; border-left: 2px solid var(--bg); border-bottom: 2px solid var(--bg); transform: rotate(-45deg) translate(1px, -1px); }
+  .dropdown-item-sub { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-faint); margin-left: auto; }
+
+  .selected-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .selected-chips:empty { display: none; }
+  .selected-chip { display: inline-flex; align-items: center; gap: 6px; padding: 5px 6px 5px 12px; background: rgba(212,255,58,0.1); border: 1px solid var(--accent); border-radius: 16px; color: var(--accent); font-size: 12px; }
+  .selected-chip-remove { width: 18px; height: 18px; background: var(--accent); color: var(--bg); border: none; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px; line-height: 1; padding: 0; font-family: inherit; }
+
+  /* 색상 선택 그리드 */
+  .color-picker { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .color-swatch { aspect-ratio: 1; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; position: relative; }
+  .color-swatch:hover:not(.used) { transform: scale(1.1); }
+  .color-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent); }
+  .color-swatch.active::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+  .color-swatch.used {
+    cursor: not-allowed;
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .color-swatch.used::before {
+    content: ''; position: absolute; inset: 0;
+    background: rgba(0,0,0,0.5); border-radius: 50%;
+  }
+  .color-swatch.used::after {
+    content: '✕'; position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-weight: 700; font-size: 14px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+  }
+  .color-picker-help {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    color: var(--text-faint); margin-top: 8px; letter-spacing: 0.05em;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .color-picker-help .x-mark {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--bg-elev); color: var(--text-dim); font-size: 9px;
+  }
+
+  /* 타입 관리 */
+  .type-card { display: flex; align-items: center; gap: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 8px; }
+  .type-card-color { width: 16px; height: 16px; border-radius: 4px; flex-shrink: 0; }
+  .type-card-name { flex: 1; font-size: 14px; font-weight: 600; }
+  .type-card-delete { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 4px 8px; font-size: 16px; }
+  .type-card-delete:hover { color: var(--coral); }
+
+  .type-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+  .type-pill { padding: 8px 14px; background: var(--bg); border: 1px solid var(--border-bright); border-radius: 10px; color: var(--text-dim); cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+  .type-pill .pill-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .type-pill.active { color: var(--text); border-color: var(--accent); background: rgba(212,255,58,0.05); }
+</style>
+</head>
+<body>
+
+<!-- 로그인 -->
+<div class="app" id="loginPage">
+  <div class="login-screen">
+    <div class="login-logo">RAW<span class="dot">.</span></div>
+    <div class="login-tagline">DANCE CREW SCHEDULE</div>
+
+    <div class="login-form" id="loginForm">
+      <div class="login-error" id="loginError"></div>
+      <div class="form-group">
+        <label class="form-label">NAME</label>
+        <div class="dropdown" id="loginNameDD">
+          <button type="button" class="dropdown-trigger" onclick="toggleLoginNameDD(event)">
+            <span class="dropdown-value placeholder" id="loginNameLabel">이름을 선택하세요</span>
+            <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="dropdown-menu" id="loginNameMenu"></div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">PASSWORD</label>
+        <input type="password" class="form-input" id="loginPw" placeholder="비밀번호" maxlength="20">
+      </div>
+      <button class="submit-btn" onclick="doLogin()">로그인</button>
+      <div class="login-link">아직 멤버가 아니신가요? <a onclick="showSignup()">크루 가입 신청</a></div>
+    </div>
+
+    <div class="login-form" id="signupForm" style="display:none;">
+      <div class="form-group"><label class="form-label">이름</label><input type="text" class="form-input" id="suName" placeholder="실명"></div>
+      <div class="form-group"><label class="form-label">생년월일</label><input type="date" class="form-input" id="suBday"></div>
+      <div class="form-group">
+        <label class="form-label">나만의 색상</label>
+        <div class="color-picker" id="suColorPicker"></div>
+        <div class="color-picker-help"><span class="x-mark">✕</span> 표시는 다른 멤버가 사용 중인 색상입니다</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">장르 (복수 선택 가능)</label>
+        <div class="dropdown" id="suGenreDD">
+          <button type="button" class="dropdown-trigger" onclick="toggleSignupGenreDD(event)">
+            <span class="dropdown-value placeholder" id="suGenreLabel">장르를 선택하세요</span>
+            <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <div class="dropdown-menu" id="suGenreMenu"></div>
+        </div>
+        <div class="selected-chips" id="suGenreSelected"></div>
+      </div>
+      <button class="submit-btn" onclick="doSignup()">가입 신청</button>
+      <div class="login-link"><a onclick="hideSignup()">로그인으로 돌아가기</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- 메인 앱 -->
+<div class="app" id="mainApp" style="display:none;">
+
+  <!-- 캘린더 페이지 -->
+  <div class="page active" id="page-calendar">
+    <header class="header">
+      <div class="header-top">
+        <div class="logo">RAW<span class="dot">.</span><span class="logo-sub">CALENDAR</span></div>
+        <div class="header-actions">
+          <div class="user-chip" onclick="goPage('profile', null)">
+            <div class="user-chip-avatar" id="userAvatar">?</div>
+            <span class="user-chip-name" id="userName">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="month-nav">
+        <h1 class="month-title" id="periodTitle">05<span class="year">2026</span></h1>
+        <div class="month-arrows">
+          <button class="arrow-btn" onclick="navPeriod(-1)">‹</button>
+          <button class="arrow-btn" onclick="goToday()">●</button>
+          <button class="arrow-btn" onclick="navPeriod(1)">›</button>
+        </div>
+      </div>
+    </header>
+
+    <div class="view-toggle">
+      <button class="view-btn active" data-view="month" onclick="setView('month', this)">월</button>
+      <button class="view-btn" data-view="week" onclick="setView('week', this)">주</button>
+      <button class="view-btn" data-view="day" onclick="setView('day', this)">일</button>
+    </div>
+
+    <!-- 월별 -->
+    <div class="calendar" id="monthView">
+      <div class="weekdays">
+        <div class="weekday sun">SUN</div><div class="weekday">MON</div><div class="weekday">TUE</div><div class="weekday">WED</div><div class="weekday">THU</div><div class="weekday">FRI</div><div class="weekday">SAT</div>
+      </div>
+      <div class="days" id="daysGrid"></div>
+    </div>
+
+    <!-- 주별 -->
+    <div class="week-view" id="weekView" style="display:none;">
+      <div class="week-header" id="weekHeader"></div>
+    </div>
+
+    <!-- 일별 -->
+    <div class="day-view" id="dayView" style="display:none;">
+      <div class="day-view-header">
+        <div class="day-view-date" id="dvDate">02</div>
+        <div class="day-view-month" id="dvMonth">2026 · 05</div>
+        <div class="day-view-day" id="dvDay">SAT</div>
+      </div>
+    </div>
+
+    <div class="schedule-section">
+      <div class="section-header">
+        <h2 class="section-title">일정</h2>
+        <span class="section-date" id="selectedDateLabel">-</span>
+      </div>
+      <div id="eventList"></div>
+    </div>
+  </div>
+
+  <!-- 멤버 페이지 -->
+  <div class="page" id="page-members">
+    <header class="header">
+      <div class="header-top">
+        <div class="logo">RAW<span class="dot">.</span><span class="logo-sub">CREW</span></div>
+        <button class="icon-btn" onclick="showInvite()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="members-section">
+      <div class="pending-banner hidden" id="pendingBanner" onclick="showApproval()">
+        <div class="pending-banner-icon">!</div>
+        <div class="pending-banner-text">
+          <strong id="pendingCount">가입 신청 0건</strong><br>
+          <span style="color: var(--text-dim); font-size: 11px;">탭하여 승인/거절</span>
+        </div>
+        <span style="color: var(--text-dim);">›</span>
+      </div>
+      <div id="memberList"></div>
+    </div>
+  </div>
+
+  <!-- 관리자 페이지 -->
+  <div class="page" id="page-admin">
+    <header class="header">
+      <div class="header-top">
+        <div class="logo">RAW<span class="dot">.</span><span class="logo-sub">ADMIN</span></div>
+      </div>
+    </header>
+    <div class="members-section">
+      <div class="pending-banner hidden" id="pendingBannerAdmin" onclick="showApproval()">
+        <div class="pending-banner-icon">!</div>
+        <div class="pending-banner-text">
+          <strong id="pendingCountAdmin">가입 신청 0건</strong><br>
+          <span style="color: var(--text-dim); font-size: 11px;">탭하여 승인/거절</span>
+        </div>
+        <span style="color: var(--text-dim);">›</span>
+      </div>
+
+      <div class="admin-section-title">멤버 관리 · 탭하여 정보 수정</div>
+      <div id="adminMemberList"></div>
+
+      <div class="admin-section-title">일정 타입 관리</div>
+      <div id="adminTypeList"></div>
+      <button class="ghost-btn" onclick="openTypeAdd()" style="margin-top: 4px;">+ 새 타입 추가</button>
+
+      <div class="admin-section-title">초대 링크</div>
+      <button class="ghost-btn" onclick="showInvite()" style="margin-top:0;">카톡 공지용 초대 링크 보기</button>
+    </div>
+  </div>
+
+  <!-- 프로필 페이지 -->
+  <div class="page" id="page-profile">
+    <header class="header">
+      <div class="header-top">
+        <div class="logo">RAW<span class="dot">.</span><span class="logo-sub">PROFILE</span></div>
+      </div>
+    </header>
+    <div class="members-section" id="profileContent"></div>
+  </div>
+
+  <button class="fab" onclick="openEventModal()">+</button>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-page="calendar" onclick="goPage('calendar', this)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      CALENDAR
+    </button>
+    <button class="nav-item" data-page="members" onclick="goPage('members', this)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      CREW
+    </button>
+    <button class="nav-item" data-page="admin" id="adminNav" onclick="goPage('admin', this)" style="display:none;">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2 4 6v6c0 5 3.4 9.4 8 10 4.6-.6 8-5 8-10V6l-8-4z"/></svg>
+      ADMIN
+    </button>
+    <button class="nav-item" data-page="profile" onclick="goPage('profile', this)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      ME
+    </button>
+  </nav>
+</div>
+
+<!-- 모달들 -->
+<!-- 일정 등록 -->
+<div class="modal-bg" id="eventModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <h2 class="modal-title">새 일정</h2>
+      <button class="close-btn" onclick="closeModal('eventModal')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">TYPE</label>
+      <div class="type-pills" id="typePills"></div>
+    </div>
+    <div class="form-group"><label class="form-label">TITLE</label><input type="text" class="form-input" id="evTitle" placeholder="예) 정기 연습 - 신곡 안무"></div>
+    <div class="form-group"><label class="form-label">DATE</label><input type="date" class="form-input" id="evDate"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">START</label><input type="time" class="form-input" id="evStart" value="19:00"></div>
+      <div class="form-group"><label class="form-label">END</label><input type="time" class="form-input" id="evEnd" value="22:00"></div>
+    </div>
+    <div class="form-group"><label class="form-label">LOCATION</label><input type="text" class="form-input" id="evLocation" placeholder="연습실 주소 또는 장소명"></div>
+    <div class="form-group">
+      <label class="form-label">참석 멤버 (탭하여 변경)</label>
+      <div class="member-toggle" id="memberToggle"></div>
+      <div class="legend-row">
+        <span class="legend-item req-text"><span class="legend-dot req">●</span>필수</span>
+        <span class="legend-item opt-text"><span class="legend-dot opt">○</span>선택</span>
+        <span class="legend-item no-text"><span class="legend-dot no">✕</span>미참여</span>
+      </div>
+    </div>
+    <div class="form-group"><label class="form-label">준비물 / 메모</label><textarea class="form-textarea" id="evMemo" placeholder="예) 운동복, 무릎보호대&#10;신곡 영상 미리 보고 오기"></textarea></div>
+    <button class="submit-btn" onclick="saveEvent()">일정 등록</button>
+  </div>
+</div>
+
+<div class="modal-bg center" id="detailModal"><div class="modal" id="detailContent"></div></div>
+
+<div class="modal-bg center" id="inviteModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">크루 초대</h2>
+      <button class="close-btn" onclick="closeModal('inviteModal')">✕</button>
+    </div>
+    <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 16px; line-height: 1.6;">아래 링크를 카톡 공지에 고정하세요.<br>클릭한 사람이 가입 신청하면 리더/관리자가 승인합니다.</p>
+    <div style="background: var(--bg); border: 1px solid var(--border-bright); border-radius: 10px; padding: 12px; font-family: 'JetBrains Mono', monospace; font-size: 11px; word-break: break-all; color: var(--accent); margin-bottom: 14px;">https://raw.crew/join/a3f9k2</div>
+    <button class="submit-btn" onclick="copyLink()">링크 복사</button>
+  </div>
+</div>
+
+<div class="modal-bg center" id="approvalModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">가입 신청</h2>
+      <button class="close-btn" onclick="closeModal('approvalModal')">✕</button>
+    </div>
+    <div id="approvalList"></div>
+  </div>
+</div>
+
+<div class="modal-bg center" id="memberDetailModal"><div class="modal" id="memberDetailContent"></div></div>
+
+<div class="modal-bg center" id="memberEditModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">멤버 정보 수정</h2>
+      <button class="close-btn" onclick="closeModal('memberEditModal')">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">이름</label><input type="text" class="form-input" id="meName"></div>
+    <div class="form-group"><label class="form-label">생년월일</label><input type="date" class="form-input" id="meBday"></div>
+    <div class="form-group">
+      <label class="form-label">색상</label>
+      <div class="color-picker" id="meColorPicker"></div>
+      <div class="color-picker-help"><span class="x-mark">✕</span> 표시는 다른 멤버가 사용 중인 색상입니다</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">장르 (복수 선택 가능)</label>
+      <div class="dropdown" id="meGenreDD">
+        <button type="button" class="dropdown-trigger" onclick="toggleEditGenreDD(event)">
+          <span class="dropdown-value placeholder" id="meGenreLabel">장르를 선택하세요</span>
+          <svg class="dropdown-arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="dropdown-menu" id="meGenreMenu"></div>
+      </div>
+      <div class="selected-chips" id="meGenreSelected"></div>
+    </div>
+    <button class="submit-btn" onclick="saveMemberEdit()">저장</button>
+  </div>
+</div>
+
+<div class="modal-bg center" id="pwChangeModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">비밀번호 변경</h2>
+      <button class="close-btn" onclick="closeModal('pwChangeModal')">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">현재 비밀번호</label><input type="password" class="form-input" id="pwCurrent"></div>
+    <div class="form-group"><label class="form-label">새 비밀번호 (6자 이상)</label><input type="password" class="form-input" id="pwNew"></div>
+    <div class="form-group"><label class="form-label">새 비밀번호 확인</label><input type="password" class="form-input" id="pwConfirm"></div>
+    <button class="submit-btn" onclick="changePassword()">변경하기</button>
+  </div>
+</div>
+
+<!-- 타입 추가 -->
+<div class="modal-bg center" id="typeAddModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">새 타입 추가</h2>
+      <button class="close-btn" onclick="closeModal('typeAddModal')">✕</button>
+    </div>
+    <div class="form-group"><label class="form-label">타입 이름</label><input type="text" class="form-input" id="taName" placeholder="예) 워크샵"></div>
+    <div class="form-group">
+      <label class="form-label">색상</label>
+      <div class="color-picker" id="taColorPicker"></div>
+      <div class="color-picker-help"><span class="x-mark">✕</span> 표시는 다른 타입이 사용 중인 색상입니다</div>
+    </div>
+    <button class="submit-btn" onclick="saveType()">타입 추가</button>
+  </div>
+</div>
+
+<!-- 확인 모달 -->
+<div class="modal-bg center" id="confirmModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="cfTitle">확인</h2>
+      <button class="close-btn" onclick="closeModal('confirmModal')">✕</button>
+    </div>
+    <p id="cfMessage" style="font-size: 14px; line-height: 1.6; color: var(--text); margin-bottom: 20px; white-space: pre-line;"></p>
+    <div style="display: flex; gap: 8px;">
+      <button class="ghost-btn" onclick="closeModal('confirmModal')" style="margin: 0;">취소</button>
+      <button class="submit-btn" id="cfOkBtn" style="margin: 0;">확인</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const today = new Date(2026, 4, 2);
+let viewYear = today.getFullYear();
+let viewMonth = today.getMonth();
+let selectedDate = new Date(today);
+let currentView = 'month'; // month/week/day
+let currentTypeId = 1;
+let currentUser = null;
+let editingMemberId = null;
+
+const GENRES = ['힙합', '걸스힙합', '락킹', '팝핀', '왁킹', '하우스', '코레오', '크럼프', 'K-POP', '브레이킹', '재즈'];
+
+// 14가지 색상 팔레트
+const COLOR_PALETTE = [
+  '#d4ff3a', '#ff6b5b', '#ffb547', '#5eead4',
+  '#60a5fa', '#c084fc', '#f472b6', '#fb7185',
+  '#fbbf24', '#a3e635', '#34d399', '#22d3ee',
+  '#818cf8', '#e879f9'
+];
+
+// 멤버 (color 추가)
+let members = [
+  { id: 1, name: '신정은', bday: '2006-04-04', password: '060404', role: 'leader', status: 'active', genres: ['힙합', '코레오'], joinedAt: '2026-05-02', color: '#d4ff3a' },
+  { id: 2, name: '김지인', bday: '2006-01-06', password: '060106', role: 'admin', status: 'active', genres: ['걸스힙합', '왁킹'], joinedAt: '2026-05-02', color: '#f472b6' },
+  { id: 3, name: '이주아', bday: '2006-07-14', password: '060714', role: 'member', status: 'active', genres: ['팝핀', '락킹'], joinedAt: '2026-05-02', color: '#60a5fa' }
+];
+
+let pendingApplications = [
+  { id: 'p1', name: '박서연', bday: '2007-03-22', genres: ['K-POP', '걸스힙합'], appliedAt: '2026-05-02 14:23', color: '#c084fc' }
+];
+
+// 일정 타입 (관리자가 추가/삭제 가능)
+let eventTypes = [
+  { id: 't1', name: '연습', color: '#d4ff3a' },
+  { id: 't2', name: '공연', color: '#ff6b5b' },
+  { id: 't3', name: '기타', color: '#ffb547' }
+];
+
+// 일정
+let events = [
+  { id: 1, typeId: 't1', title: '정기 연습', date: '2026-05-02', startTime: '19:00', endTime: '22:00', location: '강남 B-Studio · 서울 강남구 역삼로 123 지하 1층', memo: '운동복, 무릎보호대, 물 챙기기\n신곡 영상 미리 시청', attendance: { 1: { mode: 'required', status: 'yes' }, 2: { mode: 'required', status: 'yes' }, 3: { mode: 'required', status: 'pending' } } },
+  { id: 2, typeId: 't1', title: '신곡 안무 연습', date: '2026-05-05', startTime: '14:00', endTime: '18:00', location: '신촌 D-Studio · 서울 서대문구 신촌로 89 5층', memo: '거울 앞 위치 잡기\n파트별 디테일 점검', attendance: { 1: { mode: 'required', status: 'yes' }, 2: { mode: 'required', status: 'yes' }, 3: { mode: 'optional', status: 'yes' } } },
+  { id: 3, typeId: 't2', title: '홍대 버스킹', date: '2026-05-09', startTime: '18:00', endTime: '21:00', location: '홍대 걷고싶은거리 · 마포구 양화로 16길', memo: '의상 통일 (블랙)\n블루투스 스피커 챙기기\n2시간 전 현장 집결', attendance: { 1: { mode: 'required', status: 'yes' }, 2: { mode: 'required', status: 'yes' }, 3: { mode: 'required', status: 'yes' } } },
+  { id: 4, typeId: 't1', title: '드레스 리허설', date: '2026-05-15', startTime: '20:00', endTime: '23:00', location: '강남 B-Studio', memo: '본 의상 풀 착장 / 메이크업 시연', attendance: { 1: { mode: 'required', status: 'yes' }, 2: { mode: 'required', status: 'pending' }, 3: { mode: 'required', status: 'yes' } } },
+  { id: 5, typeId: 't2', title: '대학 축제 게스트', date: '2026-05-22', startTime: '19:30', endTime: '20:30', location: '서강대 메리홀 대극장', memo: '15시 리허설 / 18시 분장실 입장', attendance: { 1: { mode: 'required', status: 'yes' }, 2: { mode: 'required', status: 'yes' }, 3: { mode: 'required', status: 'yes' } } },
+  { id: 6, typeId: 't3', title: '크루 회식', date: '2026-05-23', startTime: '20:00', endTime: '23:00', location: '강남역 7번 출구 일미락', memo: '공연 뒷풀이 🍻', attendance: { 1: { mode: 'optional', status: 'yes' }, 2: { mode: 'optional', status: 'yes' }, 3: { mode: 'optional', status: 'yes' } } },
+  { id: 7, typeId: 't1', title: '체력 트레이닝', date: '2026-05-29', startTime: '10:00', endTime: '12:00', location: '잠실 W-Gym', memo: '전신 컨디셔닝 / 코어 집중', attendance: { 1: { mode: 'required', status: 'yes' }, 2: { mode: 'required', status: 'yes' }, 3: { mode: 'optional', status: 'pending' } } }
+];
+
+const monthNames = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const dayShort = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+
+function isLeader() { return currentUser && currentUser.role === 'leader'; }
+function isAdmin() { return currentUser && (currentUser.role === 'leader' || currentUser.role === 'admin'); }
+function roleLabel(r) { return r === 'leader' ? 'LEADER' : r === 'admin' ? 'ADMIN' : 'MEMBER'; }
+function getType(id) { return eventTypes.find(t => t.id === id) || { name: '?', color: '#888' }; }
+function getMemberColor(id) { return members.find(m => m.id === id)?.color || '#888'; }
+
+// 확인 모달 헬퍼
+function confirmAction(title, message, onConfirm) {
+  document.getElementById('cfTitle').textContent = title;
+  document.getElementById('cfMessage').textContent = message;
+  const okBtn = document.getElementById('cfOkBtn');
+  const newBtn = okBtn.cloneNode(true);
+  okBtn.parentNode.replaceChild(newBtn, okBtn);
+  newBtn.addEventListener('click', () => {
+    closeModal('confirmModal');
+    onConfirm();
+  });
+  document.getElementById('confirmModal').classList.add('active');
+}
+
+// ====== 로그인 ======
+let loginSelectedName = null;
+
+function renderLoginNameDD() {
+  const menu = document.getElementById('loginNameMenu');
+  const active = members.filter(m => m.status === 'active');
+  if (active.length === 0) {
+    menu.innerHTML = `<div class="dropdown-item" style="color: var(--text-faint); cursor: default;">등록된 멤버가 없습니다</div>`;
+    return;
+  }
+  menu.innerHTML = active.map(m => {
+    const roleText = roleLabel(m.role);
+    return `<div class="dropdown-item ${loginSelectedName === m.name ? 'active' : ''}" onclick="selectLoginName('${m.name}')">
+      <div style="width: 12px; height: 12px; border-radius: 50%; background: ${m.color};"></div>
+      <div style="flex: 1;">${m.name}</div>
+      <span class="dropdown-item-sub">${roleText}</span>
+    </div>`;
+  }).join('');
+}
+
+function toggleLoginNameDD(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('loginNameDD');
+  const isOpen = dd.classList.contains('open');
+  closeAllDropdowns();
+  if (!isOpen) {
+    renderLoginNameDD();
+    dd.classList.add('open');
+  }
+}
+
+function selectLoginName(name) {
+  loginSelectedName = name;
+  const m = members.find(x => x.name === name);
+  const label = document.getElementById('loginNameLabel');
+  label.innerHTML = `<span style="display:inline-block; width:12px; height:12px; border-radius:50%; background:${m.color};"></span><span>${name}</span>`;
+  label.classList.remove('placeholder');
+  document.getElementById('loginNameDD').classList.remove('open');
+  document.getElementById('loginPw').focus();
+}
+
+function doLogin() {
+  const name = loginSelectedName;
+  const pw = document.getElementById('loginPw').value.trim();
+  const errBox = document.getElementById('loginError');
+  if (!name) { errBox.textContent = '이름을 선택해주세요'; errBox.classList.add('show'); return; }
+  if (!pw) { errBox.textContent = '비밀번호를 입력해주세요'; errBox.classList.add('show'); return; }
+  const user = members.find(m => m.name === name && m.status === 'active');
+  if (!user) { errBox.textContent = '존재하지 않는 멤버입니다'; errBox.classList.add('show'); return; }
+  if (user.password !== pw) { errBox.textContent = '비밀번호가 일치하지 않습니다'; errBox.classList.add('show'); return; }
+  errBox.classList.remove('show');
+  currentUser = user;
+  enterApp();
+}
+
+function enterApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('mainApp').style.display = 'block';
+  document.getElementById('userAvatar').textContent = currentUser.name[0];
+  document.getElementById('userAvatar').style.background = currentUser.color;
+  document.getElementById('userName').textContent = currentUser.name;
+  document.getElementById('adminNav').style.display = isAdmin() ? 'flex' : 'none';
+  renderCalendar();
+  updatePendingBanner();
+}
+
+function logout() {
+  currentUser = null;
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'block';
+  loginSelectedName = null;
+  const label = document.getElementById('loginNameLabel');
+  label.textContent = '이름을 선택하세요';
+  label.classList.add('placeholder');
+  document.getElementById('loginPw').value = '';
+  hideSignup();
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-calendar').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelector('[data-page="calendar"]').classList.add('active');
+  showToast('로그아웃되었습니다');
+}
+
+// ====== 가입 ======
+function showSignup() {
+  document.getElementById('loginForm').style.display = 'none';
+  document.getElementById('signupForm').style.display = 'block';
+  closeAllDropdowns();
+  signupColor = null;
+  signupGenres.clear();
+  document.getElementById('suName').value = '';
+  document.getElementById('suBday').value = '';
+  renderSignupColorPicker();
+  renderSignupGenreDD();
+  renderSignupGenreSelected();
+}
+function hideSignup() {
+  document.getElementById('loginForm').style.display = 'block';
+  document.getElementById('signupForm').style.display = 'none';
+  closeAllDropdowns();
+}
+
+let signupGenres = new Set();
+let signupColor = null;
+
+function getUsedColors() {
+  return new Set([
+    ...members.filter(m => m.status === 'active').map(m => m.color),
+    ...pendingApplications.map(a => a.color)
+  ]);
+}
+
+function renderSignupColorPicker() {
+  const used = getUsedColors();
+  document.getElementById('suColorPicker').innerHTML = COLOR_PALETTE.map(c => {
+    const isUsed = used.has(c);
+    const isActive = signupColor === c;
+    const cls = ['color-swatch'];
+    if (isActive) cls.push('active');
+    if (isUsed && !isActive) cls.push('used');
+    return `<div class="${cls.join(' ')}"
+      style="background:${c};"
+      onclick="selectSignupColor('${c}')"
+      title="${isUsed ? '이미 사용 중인 색상' : c}"></div>`;
+  }).join('');
+}
+
+function selectSignupColor(c) {
+  signupColor = c;
+  renderSignupColorPicker();
+}
+
+function renderSignupGenreDD() {
+  document.getElementById('suGenreMenu').innerHTML = GENRES.map(g => `
+    <div class="dropdown-item ${signupGenres.has(g) ? 'active' : ''}" onclick="toggleSignupGenre('${g}')">
+      <div class="check"></div>
+      <div style="flex: 1;">${g}</div>
+    </div>
+  `).join('');
+}
+function toggleSignupGenreDD(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('suGenreDD');
+  const isOpen = dd.classList.contains('open');
+  closeAllDropdowns();
+  if (!isOpen) { renderSignupGenreDD(); dd.classList.add('open'); }
+}
+function toggleSignupGenre(g) {
+  if (signupGenres.has(g)) signupGenres.delete(g);
+  else signupGenres.add(g);
+  renderSignupGenreDD();
+  renderSignupGenreSelected();
+}
+function renderSignupGenreSelected() {
+  const label = document.getElementById('suGenreLabel');
+  const box = document.getElementById('suGenreSelected');
+  if (signupGenres.size === 0) {
+    label.textContent = '장르를 선택하세요';
+    label.classList.add('placeholder');
+    box.innerHTML = '';
+  } else {
+    label.textContent = `${signupGenres.size}개 선택됨`;
+    label.classList.remove('placeholder');
+    box.innerHTML = Array.from(signupGenres).map(g => `
+      <span class="selected-chip">${g}<button class="selected-chip-remove" onclick="toggleSignupGenre('${g}')" type="button">✕</button></span>
+    `).join('');
+  }
+}
+
+function doSignup() {
+  const name = document.getElementById('suName').value.trim();
+  const bday = document.getElementById('suBday').value;
+  if (!name) { showToast('이름을 입력해주세요'); return; }
+  if (!bday) { showToast('생년월일을 선택해주세요'); return; }
+  if (!signupColor) { showToast('색상을 선택해주세요'); return; }
+  if (signupGenres.size === 0) { showToast('장르를 1개 이상 선택해주세요'); return; }
+
+  confirmAction('가입 신청', `이름: ${name}\n생년월일: ${bday.replace(/-/g, '.')}\n장르: ${Array.from(signupGenres).join(', ')}\n\n위 정보로 가입 신청할까요?`, () => {
+    pendingApplications.push({
+      id: 'p' + Date.now(),
+      name, bday,
+      genres: Array.from(signupGenres),
+      color: signupColor,
+      appliedAt: new Date().toISOString().slice(0, 16).replace('T', ' ')
+    });
+    signupGenres.clear();
+    signupColor = null;
+    document.getElementById('suName').value = '';
+    document.getElementById('suBday').value = '';
+    renderSignupGenreSelected();
+    hideSignup();
+    showToast('✓ 가입 신청 완료');
+  });
+}
+
+// ====== 캘린더 뷰 전환 ======
+function setView(view, btn) {
+  currentView = view;
+  document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('monthView').style.display = view === 'month' ? 'block' : 'none';
+  document.getElementById('weekView').style.display = view === 'week' ? 'block' : 'none';
+  document.getElementById('dayView').style.display = view === 'day' ? 'block' : 'none';
+  renderCalendar();
+}
+
+function navPeriod(delta) {
+  if (currentView === 'month') {
+    viewMonth += delta;
+    if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+    if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+    selectedDate = new Date(viewYear, viewMonth, 1);
+  } else if (currentView === 'week') {
+    selectedDate.setDate(selectedDate.getDate() + delta * 7);
+    viewYear = selectedDate.getFullYear();
+    viewMonth = selectedDate.getMonth();
+  } else {
+    selectedDate.setDate(selectedDate.getDate() + delta);
+    viewYear = selectedDate.getFullYear();
+    viewMonth = selectedDate.getMonth();
+  }
+  renderCalendar();
+}
+
+function goToday() {
+  viewYear = today.getFullYear();
+  viewMonth = today.getMonth();
+  selectedDate = new Date(today);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  // 타이틀
+  const mm = String(viewMonth + 1).padStart(2, '0');
+  if (currentView === 'month') {
+    document.getElementById('periodTitle').innerHTML = `${mm}<span class="year">${viewYear}</span>`;
+    renderMonthView();
+  } else if (currentView === 'week') {
+    const wkStart = getWeekStart(selectedDate);
+    const wkEnd = new Date(wkStart);
+    wkEnd.setDate(wkStart.getDate() + 6);
+    const startMM = String(wkStart.getMonth() + 1).padStart(2, '0');
+    const endMM = String(wkEnd.getMonth() + 1).padStart(2, '0');
+    document.getElementById('periodTitle').innerHTML = `${startMM}.${String(wkStart.getDate()).padStart(2,'0')} - ${endMM}.${String(wkEnd.getDate()).padStart(2,'0')}<span class="year">${viewYear}</span>`;
+    renderWeekView();
+  } else {
+    const dd = String(selectedDate.getDate()).padStart(2, '0');
+    document.getElementById('periodTitle').innerHTML = `${mm}.${dd}<span class="year">${viewYear}</span>`;
+    renderDayView();
+  }
+  renderEventList();
+}
+
+function renderMonthView() {
+  const grid = document.getElementById('daysGrid');
+  grid.innerHTML = '';
+  const startDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
+  for (let i = startDay - 1; i >= 0; i--) grid.appendChild(createDay(prevMonthDays - i, true, viewMonth - 1));
+  for (let i = 1; i <= daysInMonth; i++) grid.appendChild(createDay(i, false, viewMonth));
+  const remaining = (7 - (grid.children.length % 7)) % 7;
+  for (let i = 1; i <= remaining; i++) grid.appendChild(createDay(i, true, viewMonth + 1));
+}
+
+function createDay(num, otherMonth, monthIdx) {
+  const cell = document.createElement('div');
+  cell.className = 'day';
+  if (otherMonth) cell.classList.add('other-month');
+  const realMonth = (monthIdx + 12) % 12;
+  const realYear = viewYear + (monthIdx < 0 ? -1 : monthIdx > 11 ? 1 : 0);
+  const dateStr = `${realYear}-${String(realMonth+1).padStart(2,'0')}-${String(num).padStart(2,'0')}`;
+  const dateObj = new Date(realYear, realMonth, num);
+  if (dateObj.getDay() === 0) cell.classList.add('sun');
+  if (dateStr === toISO(today)) cell.classList.add('today');
+  if (dateStr === toISO(selectedDate)) cell.classList.add('selected');
+  const isBday = !otherMonth && members.some(m => {
+    if (m.status !== 'active') return false;
+    const [, mm, dd] = m.bday.split('-');
+    return parseInt(mm) === realMonth + 1 && parseInt(dd) === num;
+  });
+  if (isBday) cell.classList.add('has-birthday');
+  cell.innerHTML = `<div class="num">${num}</div>`;
+  const dayEvents = events.filter(e => e.date === dateStr);
+  if (dayEvents.length > 0 && !otherMonth) {
+    const dotsBox = document.createElement('div');
+    dotsBox.className = 'events-dots';
+    dayEvents.slice(0, 3).forEach(e => {
+      const t = getType(e.typeId);
+      const d = document.createElement('div');
+      d.className = 'ev-dot';
+      d.style.background = t.color;
+      dotsBox.appendChild(d);
+    });
+    cell.appendChild(dotsBox);
+  }
+  cell.onclick = () => {
+    selectedDate = dateObj;
+    if (otherMonth) { viewMonth = realMonth; viewYear = realYear; }
+    renderCalendar();
+  };
+  return cell;
+}
+
+function getWeekStart(d) {
+  const r = new Date(d);
+  r.setDate(r.getDate() - r.getDay());
+  return r;
+}
+
+function renderWeekView() {
+  const wkStart = getWeekStart(selectedDate);
+  const header = document.getElementById('weekHeader');
+  header.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(wkStart);
+    d.setDate(wkStart.getDate() + i);
+    const dateStr = toISO(d);
+    const dayEvents = events.filter(e => e.date === dateStr);
+    const isToday = dateStr === toISO(today);
+    const isSelected = dateStr === toISO(selectedDate);
+    const isSun = d.getDay() === 0;
+
+    const div = document.createElement('div');
+    div.className = 'week-day';
+    if (isToday) div.classList.add('today');
+    if (isSelected) div.classList.add('selected');
+    div.innerHTML = `
+      <div class="wd-name ${isSun ? 'sun' : ''}">${dayShort[d.getDay()]}</div>
+      <div class="wd-num">${d.getDate()}</div>
+      <div class="week-events">
+        ${dayEvents.slice(0, 3).map(e => `<div class="ev-dot" style="background:${getType(e.typeId).color};"></div>`).join('')}
+      </div>
+    `;
+    div.onclick = () => {
+      selectedDate = new Date(d);
+      viewYear = selectedDate.getFullYear();
+      viewMonth = selectedDate.getMonth();
+      renderCalendar();
+    };
+    header.appendChild(div);
+  }
+}
+
+function renderDayView() {
+  document.getElementById('dvDate').textContent = String(selectedDate.getDate()).padStart(2, '0');
+  document.getElementById('dvMonth').textContent = `${selectedDate.getFullYear()} · ${String(selectedDate.getMonth()+1).padStart(2,'0')}`;
+  document.getElementById('dvDay').textContent = dayShort[selectedDate.getDay()];
+}
+
+function renderEventList() {
+  const dateStr = toISO(selectedDate);
+  document.getElementById('selectedDateLabel').textContent = `${dateStr.replace(/-/g, '.')} ${dayShort[selectedDate.getDay()]}`;
+  let dayEvents = events.filter(e => e.date === dateStr);
+  dayEvents.sort((a, b) => a.startTime.localeCompare(b.startTime));
+  const list = document.getElementById('eventList');
+  if (dayEvents.length === 0) {
+    list.innerHTML = `<div class="empty"><div class="empty-icon">∅</div><div class="empty-text">이 날 등록된 일정이 없어요</div></div>`;
+    return;
+  }
+  list.innerHTML = dayEvents.map(e => {
+    const t = getType(e.typeId);
+    const yesCount = Object.values(e.attendance).filter(a => a.status === 'yes').length;
+    const totalCount = Object.values(e.attendance).filter(a => a.mode !== 'none').length;
+    const active = members.filter(m => m.status === 'active');
+    const avatars = active.slice(0, 5).map(m => {
+      const att = e.attendance[m.id];
+      if (!att || att.mode === 'none') return '';
+      const cls = att.status === 'yes' ? '' : att.status === 'pending' ? 'pending' : 'absent';
+      return `<div class="avatar ${cls}" style="background:${m.color};">${m.name[0]}</div>`;
+    }).join('');
+    return `<div class="event-card" onclick="showEventDetail(${e.id})">
+      <div class="type-bar" style="background:${t.color};"></div>
+      <div class="event-head">
+        <span class="event-type" style="color:${t.color}; background:${t.color}1a;">${t.name.toUpperCase()}</span>
+        <span class="event-time">${e.startTime} - ${e.endTime}</span>
+      </div>
+      <div class="event-title">${e.title}</div>
+      <div class="event-meta">
+        <div class="event-meta-row"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${e.location}</div>
+        ${e.memo ? `<div class="event-meta-row" style="align-items: flex-start;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-top: 1px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><span style="white-space: pre-line; line-height: 1.5;">${e.memo}</span></div>` : ''}
+      </div>
+      <div class="attendance"><div class="avatars">${avatars}</div><div class="attendance-text"><strong>${yesCount}</strong>/${totalCount} 확정</div></div>
+    </div>`;
+  }).join('');
+}
+
+function showEventDetail(id) {
+  const e = events.find(x => x.id === id);
+  if (!e) return;
+  const t = getType(e.typeId);
+  const active = members.filter(m => m.status === 'active');
+  const memberRows = active.map(m => {
+    const att = e.attendance[m.id];
+    if (!att || att.mode === 'none') {
+      return `<div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; opacity: 0.4;"><div class="avatar absent" style="margin: 0;">${m.name[0]}</div><div style="flex: 1;">${m.name}</div><div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--text-faint);">미참여</div></div>`;
+    }
+    const statusColor = att.status === 'yes' ? 'var(--accent)' : att.status === 'no' ? 'var(--coral)' : 'var(--warning)';
+    const statusText = att.status === 'yes' ? 'OK' : att.status === 'no' ? 'NO' : '대기';
+    const modeText = att.mode === 'required' ? '필수' : '선택';
+    return `<div style="display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border);"><div class="avatar" style="margin: 0; background:${m.color};">${m.name[0]}</div><div style="flex: 1;"><div style="font-size: 13px;">${m.name}</div><div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-dim);">${modeText}</div></div><div style="font-family: 'JetBrains Mono', monospace; font-size: 10px; color: ${statusColor}; font-weight: 700;">${statusText}</div></div>`;
+  }).join('');
+  const myAtt = e.attendance[currentUser.id];
+  const showMyButtons = myAtt && myAtt.mode !== 'none';
+  const adminDelete = isAdmin() ? `<button class="danger-btn" onclick="deleteEvent(${e.id})">일정 삭제</button>` : '';
+  document.getElementById('detailContent').innerHTML = `
+    <div class="modal-header"><h2 class="modal-title">${t.name}</h2><button class="close-btn" onclick="closeModal('detailModal')">✕</button></div>
+    <div style="margin-bottom: 16px;"><div style="font-size: 22px; font-weight: 700; margin-bottom: 6px;">${e.title}</div><div style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-dim);">${e.date.replace(/-/g, '.')} · ${e.startTime} - ${e.endTime}</div></div>
+    <div style="background: var(--bg); border-radius: 10px; padding: 12px; margin-bottom: 14px; border: 1px solid var(--border);"><div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.1em;">LOCATION</div><div style="font-size: 13px;">${e.location}</div></div>
+    ${e.memo ? `<div style="background: var(--bg); border-radius: 10px; padding: 12px; margin-bottom: 14px; border: 1px solid var(--border);"><div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-dim); margin-bottom: 6px; letter-spacing: 0.1em;">MEMO</div><div style="font-size: 13px; white-space: pre-line; line-height: 1.6;">${e.memo}</div></div>` : ''}
+    <div style="margin-bottom: 14px;"><div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--text-dim); margin-bottom: 8px; letter-spacing: 0.1em;">참석 현황</div>${memberRows}</div>
+    ${showMyButtons ? `<div style="display: flex; gap: 8px; margin-bottom: 8px;"><button class="btn-reject" onclick="setMyStatus(${e.id}, 'no')">불참</button><button class="btn-approve" onclick="setMyStatus(${e.id}, 'yes')">참석</button></div>` : ''}
+    ${adminDelete}`;
+  document.getElementById('detailModal').classList.add('active');
+}
+
+function setMyStatus(eid, status) {
+  const e = events.find(x => x.id === eid);
+  if (!e || !e.attendance[currentUser.id]) return;
+  const statusText = status === 'yes' ? '참석' : '불참';
+  confirmAction(`${statusText} 확정`, `"${e.title}"\n${e.date.replace(/-/g, '.')} ${e.startTime} - ${e.endTime}\n\n위 일정에 ${statusText}으로 변경할까요?`, () => {
+    e.attendance[currentUser.id].status = status;
+    closeModal('detailModal');
+    renderEventList();
+    showToast(status === 'yes' ? '✓ 참석으로 변경' : '✗ 불참으로 변경');
+  });
+}
+
+function deleteEvent(eid) {
+  const e = events.find(x => x.id === eid);
+  if (!e) return;
+  confirmAction('일정 삭제', `"${e.title}"\n\n이 일정을 삭제할까요?\n삭제하면 복구할 수 없습니다.`, () => {
+    events = events.filter(x => x.id !== eid);
+    closeModal('detailModal');
+    renderCalendar();
+    showToast('일정이 삭제되었습니다');
+  });
+}
+
+// ====== 멤버 ======
+function renderMembers() {
+  document.getElementById('memberList').innerHTML = members.filter(m => m.status === 'active').map(m => renderMemberCard(m)).join('');
+}
+
+function renderMemberCard(m) {
+  const tags = [];
+  if (m.role === 'leader') tags.push('<span class="role-tag leader">LEADER</span>');
+  else if (m.role === 'admin') tags.push('<span class="role-tag admin">ADMIN</span>');
+  const genres = m.genres.map(g => `<span class="genre-tag">${g}</span>`).join('');
+  return `<div class="member-card" onclick="showMemberDetail(${m.id})">
+    <div class="member-avatar-lg" style="background:${m.color};">${m.name[0]}</div>
+    <div class="member-info">
+      <div class="member-name">${m.name} ${tags.join(' ')}</div>
+      <div class="member-meta">생년월일 ${m.bday.replace(/-/g, '.')} · 영입 ${m.joinedAt.replace(/-/g, '.')}</div>
+      <div class="member-genres">${genres}</div>
+    </div>
+  </div>`;
+}
+
+function showMemberDetail(id) {
+  const m = members.find(x => x.id === id);
+  if (!m) return;
+  const isMe = currentUser.id === m.id;
+  const canTogglePerm = isLeader() && m.id !== currentUser.id;
+
+  let html = `<div class="modal-header">
+    <h2 class="modal-title">멤버 정보</h2>
+    <button class="close-btn" onclick="closeModal('memberDetailModal')">✕</button>
+  </div>
+  <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px;">
+    <div class="member-avatar-lg" style="width: 56px; height: 56px; font-size: 22px; background:${m.color};">${m.name[0]}</div>
+    <div>
+      <div style="font-size: 20px; font-weight: 700;">${m.name}</div>
+      <div class="member-meta" style="font-size: 11px; margin-top: 2px;">${roleLabel(m.role)}</div>
+    </div>
+  </div>
+  <div style="background: var(--bg); border-radius: 10px; padding: 14px; border: 1px solid var(--border); margin-bottom: 14px;">
+    <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
+      <span style="color: var(--text-dim);">생년월일</span>
+      <span style="font-family: 'JetBrains Mono', monospace;">${m.bday.replace(/-/g, '.')}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-top: 1px solid var(--border);">
+      <span style="color: var(--text-dim);">영입일</span>
+      <span style="font-family: 'JetBrains Mono', monospace;">${m.joinedAt.replace(/-/g, '.')}</span>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; border-top: 1px solid var(--border);">
+      <span style="color: var(--text-dim);">색상</span>
+      <span style="display:flex; align-items:center; gap:6px;"><span style="width:14px; height:14px; border-radius:50%; background:${m.color};"></span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">${m.color}</span></span>
+    </div>
+    <div style="padding: 8px 0 4px; font-size: 13px; border-top: 1px solid var(--border);">
+      <div style="color: var(--text-dim); margin-bottom: 6px;">장르</div>
+      <div class="member-genres">${m.genres.map(g => `<span class="genre-tag">${g}</span>`).join('')}</div>
+    </div>
+  </div>`;
+
+  if (isMe) {
+    html += `<div class="admin-section-title" style="margin-top: 8px;">내 계정</div>
+      <button class="ghost-btn" onclick="closeModal('memberDetailModal'); openMemberEdit(${m.id});" style="margin-top: 0;">정보 수정</button>
+      <button class="ghost-btn" onclick="closeModal('memberDetailModal'); openPwChange();">비밀번호 변경</button>
+      <button class="danger-btn" onclick="logout()">로그아웃</button>`;
+  }
+
+  if (isAdmin() && !isMe) {
+    html += `<div class="admin-section-title">관리자 액션</div>
+      <button class="ghost-btn" onclick="closeModal('memberDetailModal'); openMemberEdit(${m.id});" style="margin-top: 0;">멤버 정보 수정</button>
+      <button class="ghost-btn" onclick="resetPassword(${m.id})">🔑 비밀번호 초기화 (생년월일 6자리)</button>`;
+
+    if (canTogglePerm && m.role !== 'leader') {
+      const isAdminRole = m.role === 'admin';
+      html += `<div class="toggle-row" style="margin-top: 8px;">
+        <div class="toggle-info"><strong>관리자 권한</strong><span>승인/초기화 등 관리 기능 사용</span></div>
+        <div class="toggle ${isAdminRole ? 'on' : ''}" onclick="toggleAdmin(${m.id}, this)"></div>
+      </div>`;
+    }
+
+    // 크루에서 내보내기는 리더만
+    if (isLeader() && m.role !== 'leader') {
+      html += `<button class="danger-btn" onclick="kickMember(${m.id})">✕ 크루에서 내보내기</button>`;
+    }
+  }
+
+  document.getElementById('memberDetailContent').innerHTML = html;
+  document.getElementById('memberDetailModal').classList.add('active');
+}
+
+function renderAdmin() {
+  document.getElementById('adminMemberList').innerHTML = members.filter(m => m.status === 'active').map(m => renderMemberCard(m)).join('');
+  renderAdminTypes();
+}
+
+function renderProfile() {
+  const m = currentUser;
+  document.getElementById('profileContent').innerHTML = `
+    <div style="display: flex; align-items: center; gap: 16px; margin: 20px 0 24px;">
+      <div class="member-avatar-lg" style="width: 64px; height: 64px; font-size: 26px; background:${m.color};">${m.name[0]}</div>
+      <div>
+        <div style="font-size: 22px; font-weight: 700;">${m.name}</div>
+        <div class="member-meta" style="font-size: 11px; margin-top: 4px;">${roleLabel(m.role)}</div>
+      </div>
+    </div>
+    <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; margin-bottom: 16px;">
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
+        <span style="color: var(--text-dim);">생년월일</span>
+        <span style="font-family: 'JetBrains Mono', monospace;">${m.bday.replace(/-/g, '.')}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; border-top: 1px solid var(--border);">
+        <span style="color: var(--text-dim);">영입일</span>
+        <span style="font-family: 'JetBrains Mono', monospace;">${m.joinedAt.replace(/-/g, '.')}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 13px; border-top: 1px solid var(--border);">
+        <span style="color: var(--text-dim);">색상</span>
+        <span style="display:flex; align-items:center; gap:6px;"><span style="width:14px; height:14px; border-radius:50%; background:${m.color};"></span><span style="font-family: 'JetBrains Mono', monospace; font-size: 10px;">${m.color}</span></span>
+      </div>
+      <div style="padding: 8px 0 4px; font-size: 13px; border-top: 1px solid var(--border);">
+        <div style="color: var(--text-dim); margin-bottom: 6px;">장르</div>
+        <div class="member-genres">${m.genres.map(g => `<span class="genre-tag">${g}</span>`).join('')}</div>
+      </div>
+    </div>
+    <div class="admin-section-title">내 계정</div>
+    <button class="ghost-btn" onclick="openMemberEdit(${m.id})" style="margin-top: 0;">정보 수정</button>
+    <button class="ghost-btn" onclick="openPwChange()">비밀번호 변경</button>
+    <button class="danger-btn" onclick="logout()">로그아웃</button>`;
+}
+
+// ====== 멤버 정보 수정 ======
+let editGenres = new Set();
+let editColor = null;
+
+function openMemberEdit(id) {
+  const m = members.find(x => x.id === id);
+  if (!m) return;
+  // 권한 체크: 본인 또는 관리자
+  if (currentUser.id !== m.id && !isAdmin()) { showToast('수정 권한이 없습니다'); return; }
+  editingMemberId = id;
+  editGenres = new Set(m.genres);
+  editColor = m.color;
+  document.getElementById('meName').value = m.name;
+  document.getElementById('meBday').value = m.bday;
+  renderEditColorPicker();
+  renderEditGenreDD();
+  renderEditGenreSelected();
+  document.getElementById('memberEditModal').classList.add('active');
+}
+
+function renderEditColorPicker() {
+  const used = getUsedColors();
+  // 본인 색상은 사용 가능
+  const m = members.find(x => x.id === editingMemberId);
+  if (m) used.delete(m.color);
+  document.getElementById('meColorPicker').innerHTML = COLOR_PALETTE.map(c => {
+    const isUsed = used.has(c);
+    const isActive = editColor === c;
+    const cls = ['color-swatch'];
+    if (isActive) cls.push('active');
+    if (isUsed && !isActive) cls.push('used');
+    return `<div class="${cls.join(' ')}"
+      style="background:${c};"
+      onclick="selectEditColor('${c}')"
+      title="${isUsed ? '이미 사용 중인 색상' : c}"></div>`;
+  }).join('');
+}
+function selectEditColor(c) { editColor = c; renderEditColorPicker(); }
+
+function renderEditGenreDD() {
+  document.getElementById('meGenreMenu').innerHTML = GENRES.map(g => `
+    <div class="dropdown-item ${editGenres.has(g) ? 'active' : ''}" onclick="toggleEditGenre('${g}')">
+      <div class="check"></div><div style="flex: 1;">${g}</div>
+    </div>`).join('');
+}
+function toggleEditGenreDD(e) {
+  e.stopPropagation();
+  const dd = document.getElementById('meGenreDD');
+  const isOpen = dd.classList.contains('open');
+  closeAllDropdowns();
+  if (!isOpen) { renderEditGenreDD(); dd.classList.add('open'); }
+}
+function toggleEditGenre(g) {
+  if (editGenres.has(g)) editGenres.delete(g);
+  else editGenres.add(g);
+  renderEditGenreDD();
+  renderEditGenreSelected();
+}
+function renderEditGenreSelected() {
+  const label = document.getElementById('meGenreLabel');
+  const box = document.getElementById('meGenreSelected');
+  if (editGenres.size === 0) {
+    label.textContent = '장르를 선택하세요';
+    label.classList.add('placeholder');
+    box.innerHTML = '';
+  } else {
+    label.textContent = `${editGenres.size}개 선택됨`;
+    label.classList.remove('placeholder');
+    box.innerHTML = Array.from(editGenres).map(g => `
+      <span class="selected-chip">${g}<button class="selected-chip-remove" onclick="toggleEditGenre('${g}')" type="button">✕</button></span>`).join('');
+  }
+}
+
+function saveMemberEdit() {
+  const m = members.find(x => x.id === editingMemberId);
+  if (!m) return;
+  const name = document.getElementById('meName').value.trim();
+  const bday = document.getElementById('meBday').value;
+  if (!name) { showToast('이름은 필수입니다'); return; }
+  if (!bday) { showToast('생년월일은 필수입니다'); return; }
+  if (editGenres.size === 0) { showToast('장르를 1개 이상 선택해주세요'); return; }
+  if (!editColor) { showToast('색상을 선택해주세요'); return; }
+
+  confirmAction('정보 수정', `${m.name}님의 정보를 저장할까요?`, () => {
+    m.name = name;
+    m.bday = bday;
+    m.genres = Array.from(editGenres);
+    m.color = editColor;
+    closeModal('memberEditModal');
+    if (currentUser.id === m.id) {
+      document.getElementById('userName').textContent = m.name;
+      document.getElementById('userAvatar').textContent = m.name[0];
+      document.getElementById('userAvatar').style.background = m.color;
+    }
+    renderMembers();
+    renderAdmin();
+    renderProfile();
+    renderCalendar();
+    showToast('✓ 정보가 저장되었습니다');
+  });
+}
+
+function openPwChange() {
+  document.getElementById('pwCurrent').value = '';
+  document.getElementById('pwNew').value = '';
+  document.getElementById('pwConfirm').value = '';
+  document.getElementById('pwChangeModal').classList.add('active');
+}
+
+function changePassword() {
+  const cur = document.getElementById('pwCurrent').value;
+  const nw = document.getElementById('pwNew').value;
+  const cf = document.getElementById('pwConfirm').value;
+  if (cur !== currentUser.password) { showToast('현재 비밀번호가 일치하지 않습니다'); return; }
+  if (nw.length < 6) { showToast('새 비밀번호는 6자 이상이어야 합니다'); return; }
+  if (nw !== cf) { showToast('새 비밀번호 확인이 일치하지 않습니다'); return; }
+  confirmAction('비밀번호 변경', '새 비밀번호로 변경할까요?', () => {
+    currentUser.password = nw;
+    closeModal('pwChangeModal');
+    showToast('✓ 비밀번호가 변경되었습니다');
+  });
+}
+
+function resetPassword(id) {
+  if (!isAdmin()) return;
+  const m = members.find(x => x.id === id);
+  if (!m) return;
+  const ymd = m.bday.split('-');
+  const initialPw = ymd[0].slice(2) + ymd[1] + ymd[2];
+  confirmAction('비밀번호 초기화', `${m.name}님의 비밀번호를\n생년월일 6자리(${initialPw})로\n초기화할까요?`, () => {
+    m.password = initialPw;
+    showToast(`✓ ${m.name} 비밀번호 초기화 (${initialPw})`);
+    closeModal('memberDetailModal');
+  });
+}
+
+function toggleAdmin(id, el) {
+  if (!isLeader()) return;
+  const m = members.find(x => x.id === id);
+  if (!m) return;
+  const willBeAdmin = m.role !== 'admin';
+  const action = willBeAdmin ? '부여' : '회수';
+  confirmAction('관리자 권한 ' + action, `${m.name}님에게\n관리자 권한을 ${action}할까요?`, () => {
+    if (willBeAdmin) {
+      m.role = 'admin';
+      el.classList.add('on');
+      showToast(`✓ ${m.name}님 관리자 권한 부여`);
+    } else {
+      m.role = 'member';
+      el.classList.remove('on');
+      showToast(`${m.name}님 관리자 권한 회수`);
+    }
+    setTimeout(() => {
+      closeModal('memberDetailModal');
+      renderMembers();
+      renderAdmin();
+    }, 600);
+  });
+}
+
+function kickMember(id) {
+  if (!isLeader()) return;
+  const m = members.find(x => x.id === id);
+  if (!m) return;
+  confirmAction('크루에서 내보내기', `${m.name}님을\n크루에서 내보낼까요?\n\n복구하려면 다시 가입 신청을\n받아야 합니다.`, () => {
+    members = members.filter(x => x.id !== id);
+    closeModal('memberDetailModal');
+    renderMembers();
+    renderAdmin();
+    showToast(`${m.name}님이 크루에서 제외되었습니다`);
+  });
+}
+
+// ====== 가입 승인 ======
+function showApproval() {
+  if (pendingApplications.length === 0) { showToast('승인 대기 중인 신청이 없습니다'); return; }
+  document.getElementById('approvalList').innerHTML = pendingApplications.map(a => `
+    <div class="approval-card">
+      <div class="approval-info">
+        <div class="approval-name"><span class="approval-color-dot" style="background:${a.color};"></span>${a.name}</div>
+        <div class="approval-detail">생년월일 ${a.bday.replace(/-/g, '.')}</div>
+        <div class="approval-detail">장르 ${a.genres.join(', ')}</div>
+        <div class="approval-detail" style="color: var(--text-faint); margin-top: 4px;">신청 ${a.appliedAt}</div>
+      </div>
+      <div class="approval-actions">
+        <button class="btn-reject" onclick="handleApproval('${a.id}', false)">거절</button>
+        <button class="btn-approve" onclick="handleApproval('${a.id}', true)">승인</button>
+      </div>
+    </div>`).join('');
+  document.getElementById('approvalModal').classList.add('active');
+}
+
+function handleApproval(appId, approved) {
+  const app = pendingApplications.find(a => a.id === appId);
+  if (!app) return;
+  if (approved) {
+    confirmAction('가입 승인', `${app.name}님의\n가입을 승인할까요?`, () => {
+      const ymd = app.bday.split('-');
+      const initialPw = ymd[0].slice(2) + ymd[1] + ymd[2];
+      const newId = Math.max(...members.map(m => m.id)) + 1;
+      members.push({ id: newId, name: app.name, bday: app.bday, password: initialPw, role: 'member', status: 'active', genres: app.genres, joinedAt: new Date().toISOString().slice(0, 10), color: app.color });
+      pendingApplications = pendingApplications.filter(a => a.id !== appId);
+      if (pendingApplications.length === 0) closeModal('approvalModal');
+      else showApproval();
+      updatePendingBanner();
+      renderMembers();
+      renderAdmin();
+      showToast(`✓ ${app.name}님 합류 (초기 PW: ${initialPw})`);
+    });
+  } else {
+    confirmAction('가입 거절', `${app.name}님의\n가입 신청을 거절할까요?`, () => {
+      pendingApplications = pendingApplications.filter(a => a.id !== appId);
+      if (pendingApplications.length === 0) closeModal('approvalModal');
+      else showApproval();
+      updatePendingBanner();
+      showToast(`${app.name}님 신청을 거절했습니다`);
+    });
+  }
+}
+
+function updatePendingBanner() {
+  const has = pendingApplications.length > 0 && isAdmin();
+  ['pendingBanner', 'pendingBannerAdmin'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.toggle('hidden', !has);
+  });
+  ['pendingCount', 'pendingCountAdmin'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = `가입 신청 ${pendingApplications.length}건`;
+  });
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('has-notif'));
+  if (has) {
+    const target = isAdmin() ? document.querySelector('[data-page="admin"]') : document.querySelector('[data-page="members"]');
+    if (target) target.classList.add('has-notif');
+  }
+}
+
+// ====== 일정 타입 관리 ======
+function renderAdminTypes() {
+  document.getElementById('adminTypeList').innerHTML = eventTypes.map(t => `
+    <div class="type-card">
+      <div class="type-card-color" style="background:${t.color};"></div>
+      <div class="type-card-name">${t.name}</div>
+      <button class="type-card-delete" onclick="deleteType('${t.id}')" title="삭제">✕</button>
+    </div>
+  `).join('');
+}
+
+let typeAddColor = null;
+function openTypeAdd() {
+  typeAddColor = null;
+  document.getElementById('taName').value = '';
+  renderTypeColorPicker();
+  document.getElementById('typeAddModal').classList.add('active');
+}
+
+function renderTypeColorPicker() {
+  const usedTypeColors = new Set(eventTypes.map(t => t.color));
+  document.getElementById('taColorPicker').innerHTML = COLOR_PALETTE.map(c => {
+    const isUsed = usedTypeColors.has(c);
+    const isActive = typeAddColor === c;
+    const cls = ['color-swatch'];
+    if (isActive) cls.push('active');
+    if (isUsed && !isActive) cls.push('used');
+    return `<div class="${cls.join(' ')}"
+      style="background:${c};"
+      onclick="selectTypeColor('${c}')"
+      title="${isUsed ? '이미 사용 중인 색상' : c}"></div>`;
+  }).join('');
+}
+function selectTypeColor(c) { typeAddColor = c; renderTypeColorPicker(); }
+
+function saveType() {
+  const name = document.getElementById('taName').value.trim();
+  if (!name) { showToast('타입 이름을 입력해주세요'); return; }
+  if (!typeAddColor) { showToast('색상을 선택해주세요'); return; }
+  if (eventTypes.some(t => t.name === name)) { showToast('이미 존재하는 타입 이름입니다'); return; }
+  confirmAction('타입 추가', `"${name}" 타입을 추가할까요?`, () => {
+    eventTypes.push({ id: 't' + Date.now(), name, color: typeAddColor });
+    closeModal('typeAddModal');
+    renderAdminTypes();
+    showToast('✓ 새 타입이 추가되었습니다');
+  });
+}
+
+function deleteType(tid) {
+  const t = eventTypes.find(x => x.id === tid);
+  if (!t) return;
+  if (eventTypes.length <= 1) { showToast('최소 1개의 타입은 필요합니다'); return; }
+  const usedCount = events.filter(e => e.typeId === tid).length;
+  const msg = usedCount > 0
+    ? `"${t.name}" 타입을 삭제할까요?\n\n이 타입을 사용하는 일정 ${usedCount}건이\n다른 타입으로 자동 변경됩니다.`
+    : `"${t.name}" 타입을 삭제할까요?`;
+  confirmAction('타입 삭제', msg, () => {
+    const fallbackId = eventTypes.find(x => x.id !== tid).id;
+    events.forEach(e => { if (e.typeId === tid) e.typeId = fallbackId; });
+    eventTypes = eventTypes.filter(x => x.id !== tid);
+    renderAdminTypes();
+    renderCalendar();
+    showToast('타입이 삭제되었습니다');
+  });
+}
+
+// ====== 페이지 전환 ======
+function goPage(page, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else { const target = document.querySelector(`[data-page="${page}"]`); if (target) target.classList.add('active'); }
+  if (page === 'members') renderMembers();
+  if (page === 'admin') renderAdmin();
+  if (page === 'profile') renderProfile();
+  window.scrollTo(0, 0);
+}
+
+// ====== 일정 등록 ======
+function openEventModal() {
+  if (!isAdmin()) { showToast('일정 등록은 관리자만 가능합니다'); return; }
+  if (eventTypes.length === 0) { showToast('먼저 일정 타입을 추가해주세요'); return; }
+  currentTypeId = eventTypes[0].id;
+  document.getElementById('evDate').value = toISO(selectedDate);
+  document.getElementById('evTitle').value = '';
+  document.getElementById('evLocation').value = '';
+  document.getElementById('evMemo').value = '';
+  document.getElementById('evStart').value = '19:00';
+  document.getElementById('evEnd').value = '22:00';
+  renderTypePills();
+  renderMemberToggle();
+  document.getElementById('eventModal').classList.add('active');
+}
+
+function renderTypePills() {
+  document.getElementById('typePills').innerHTML = eventTypes.map(t => `
+    <div class="type-pill ${currentTypeId === t.id ? 'active' : ''}" onclick="selectType('${t.id}')">
+      <span class="pill-dot" style="background:${t.color};"></span>${t.name}
+    </div>`).join('');
+}
+function selectType(tid) { currentTypeId = tid; renderTypePills(); }
+
+function renderMemberToggle() {
+  document.getElementById('memberToggle').innerHTML = members.filter(m => m.status === 'active').map(m => `
+    <div class="member-chip required" data-mid="${m.id}" data-mode="required" onclick="cycleMember(this)">
+      <span class="chip-icon">●</span>
+      <span class="chip-name">${m.name}</span>
+    </div>`).join('');
+}
+function cycleMember(el) {
+  const cur = el.dataset.mode;
+  const next = cur === 'required' ? 'optional' : cur === 'optional' ? 'none' : 'required';
+  el.dataset.mode = next;
+  el.classList.remove('required', 'optional', 'none');
+  el.classList.add(next);
+  const icon = el.querySelector('.chip-icon');
+  if (next === 'required') icon.textContent = '●';
+  else if (next === 'optional') icon.textContent = '○';
+  else icon.textContent = '✕';
+}
+
+function saveEvent() {
+  const title = document.getElementById('evTitle').value.trim();
+  if (!title) { showToast('일정 제목을 입력해주세요'); return; }
+  const date = document.getElementById('evDate').value;
+  const startTime = document.getElementById('evStart').value;
+  const endTime = document.getElementById('evEnd').value;
+  if (!date || !startTime || !endTime) { showToast('날짜와 시간을 입력해주세요'); return; }
+  if (endTime <= startTime) { showToast('종료 시간은 시작 시간보다 늦어야 합니다'); return; }
+  const location = document.getElementById('evLocation').value.trim() || '미정';
+  const memo = document.getElementById('evMemo').value.trim();
+  const attendance = {};
+  document.querySelectorAll('#memberToggle .member-chip').forEach(el => {
+    const mid = parseInt(el.dataset.mid);
+    if (el.dataset.mode !== 'none') attendance[mid] = { mode: el.dataset.mode, status: 'pending' };
+  });
+
+  const t = getType(currentTypeId);
+  confirmAction('일정 등록', `${t.name} · ${title}\n${date.replace(/-/g, '.')} ${startTime} - ${endTime}\n\n위 일정을 등록할까요?`, () => {
+    events.push({ id: Date.now(), typeId: currentTypeId, title, date, startTime, endTime, location, memo, attendance });
+    closeModal('eventModal');
+    selectedDate = new Date(date);
+    viewYear = selectedDate.getFullYear();
+    viewMonth = selectedDate.getMonth();
+    renderCalendar();
+    showToast('✓ 일정이 등록되었습니다');
+  });
+}
+
+// ====== 기타 ======
+function showInvite() { document.getElementById('inviteModal').classList.add('active'); }
+function copyLink() { showToast('✓ 링크가 복사되었습니다'); closeModal('inviteModal'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+function toISO(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+
+// 모달 배경 클릭으로는 닫히지 않음 (✕ 버튼만)
+// document.querySelectorAll('.modal-bg').forEach(bg => {
+//   bg.addEventListener('click', e => { if (e.target === bg) bg.classList.remove('active'); });
+// });
+
+
+// ====== SUPABASE 연결 코드: ChatGPT 수정본 ======
+const SUPABASE_URL = 'https://vagadmfbpxscwembkfud.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_lpmWWRpirn4DIzTn2zoMmg_ODvuXL58';
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+function mapMember(row) {
+  return {
+    id: Number(row.id),
+    name: row.name,
+    bday: row.bday,
+    role: row.role,
+    status: row.status,
+    genres: row.genres || [],
+    joinedAt: row.joined_at || row.created_at?.slice(0, 10) || '',
+    color: row.color || '#888'
+  };
+}
+function mapApplication(row) {
+  return {
+    id: Number(row.id),
+    name: row.name,
+    bday: row.bday,
+    genres: row.genres || [],
+    appliedAt: (row.applied_at || row.created_at || '').slice(0, 16).replace('T', ' '),
+    color: row.color || '#888'
+  };
+}
+function mapEvent(row) {
+  return {
+    id: Number(row.id),
+    typeId: row.type_id,
+    title: row.title,
+    date: row.event_date,
+    startTime: (row.start_time || '').slice(0,5),
+    endTime: (row.end_time || '').slice(0,5),
+    location: row.location || '미정',
+    memo: row.memo || '',
+    attendance: row.attendance || {}
+  };
+}
+async function refreshAllData() {
+  try {
+    const [memRes, appRes, typeRes, eventRes] = await Promise.all([
+      sb.from('members').select('*').order('id', { ascending: true }),
+      sb.from('pending_applications').select('*').eq('status', 'pending').order('applied_at', { ascending: true }),
+      sb.from('event_types').select('*').order('id', { ascending: true }),
+      sb.from('events').select('*').order('event_date', { ascending: true }).order('start_time', { ascending: true })
+    ]);
+
+    if (memRes.error) throw memRes.error;
+    if (appRes.error) throw appRes.error;
+    if (typeRes.error) throw typeRes.error;
+    if (eventRes.error) throw eventRes.error;
+
+    members = (memRes.data || []).map(mapMember);
+    pendingApplications = (appRes.data || []).map(mapApplication);
+    eventTypes = typeRes.data || [];
+    events = (eventRes.data || []).map(mapEvent);
+
+    if (currentUser) {
+      const fresh = members.find(m => m.id === currentUser.id);
+      if (fresh) currentUser = fresh;
+    }
+    renderLoginNameDD();
+    if (currentUser) {
+      document.getElementById('userAvatar').textContent = currentUser.name[0];
+      document.getElementById('userAvatar').style.background = currentUser.color;
+      document.getElementById('userName').textContent = currentUser.name;
+      document.getElementById('adminNav').style.display = isAdmin() ? 'flex' : 'none';
+      renderCalendar();
+      updatePendingBanner();
+      renderMembers();
+      renderAdmin();
+    }
+    console.log('Supabase data loaded');
+    return true;
+  } catch (err) {
+    console.error('Supabase load error:', err);
+    showToast('DB 연결 오류: ' + (err.message || err));
+    return false;
+  }
+}
+
+async function doLogin() {
+  const name = loginSelectedName;
+  const pw = document.getElementById('loginPw').value.trim();
+  const errBox = document.getElementById('loginError');
+  if (!name) { errBox.textContent = '이름을 선택해주세요'; errBox.classList.add('show'); return; }
+  if (!pw) { errBox.textContent = '비밀번호를 입력해주세요'; errBox.classList.add('show'); return; }
+  const { data, error } = await sb.rpc('login_member', { p_name: name, p_password: pw });
+  if (error) { errBox.textContent = 'DB 로그인 오류: ' + error.message; errBox.classList.add('show'); return; }
+  if (!data?.ok) { errBox.textContent = data?.message || '로그인 실패'; errBox.classList.add('show'); return; }
+  errBox.classList.remove('show');
+  await refreshAllData();
+  currentUser = mapMember({
+    id: data.member.id,
+    name: data.member.name,
+    bday: data.member.bday,
+    role: data.member.role,
+    status: data.member.status || 'active',
+    genres: data.member.genres || [],
+    joined_at: data.member.joinedAt || data.member.joined_at || '',
+    color: data.member.color
+  });
+  const full = members.find(m => m.id === currentUser.id);
+  if (full) currentUser = full;
+  enterApp();
+}
+
+async function doSignup() {
+  const name = document.getElementById('suName').value.trim();
+  const bday = document.getElementById('suBday').value;
+  if (!name) { showToast('이름을 입력해주세요'); return; }
+  if (!bday) { showToast('생년월일을 선택해주세요'); return; }
+  if (!signupColor) { showToast('색상을 선택해주세요'); return; }
+  if (signupGenres.size === 0) { showToast('장르를 1개 이상 선택해주세요'); return; }
+
+  confirmAction('가입 신청', `이름: ${name}
+생년월일: ${bday.replace(/-/g, '.')}
+장르: ${Array.from(signupGenres).join(', ')}
+
+위 정보로 가입 신청할까요?`, async () => {
+    const { data, error } = await sb.rpc('request_join', {
+      p_name: name,
+      p_bday: bday,
+      p_genres: Array.from(signupGenres),
+      p_color: signupColor
+    });
+    if (error || !data?.ok) { showToast(error?.message || data?.message || '가입 신청 실패'); return; }
+    await refreshAllData();
+    signupGenres.clear();
+    signupColor = null;
+    document.getElementById('suName').value = '';
+    document.getElementById('suBday').value = '';
+    renderSignupGenreSelected();
+    hideSignup();
+    showToast('✓ 가입 신청 완료');
+  });
+}
+
+async function setMyStatus(eid, status) {
+  const e = events.find(x => x.id === eid);
+  if (!e || !e.attendance[currentUser.id]) return;
+  const statusText = status === 'yes' ? '참석' : '불참';
+  confirmAction(`${statusText} 확정`, `"${e.title}"
+${e.date.replace(/-/g, '.')} ${e.startTime} - ${e.endTime}
+
+위 일정에 ${statusText}으로 변경할까요?`, async () => {
+    e.attendance[currentUser.id].status = status;
+    const { error } = await sb.from('events').update({ attendance: e.attendance }).eq('id', eid);
+    if (error) { showToast('저장 실패: ' + error.message); return; }
+    closeModal('detailModal');
+    await refreshAllData();
+    showToast(status === 'yes' ? '✓ 참석으로 변경' : '✗ 불참으로 변경');
+  });
+}
+
+async function deleteEvent(eid) {
+  const e = events.find(x => x.id === eid);
+  if (!e) return;
+  confirmAction('일정 삭제', `"${e.title}"
+
+이 일정을 삭제할까요?
+삭제하면 복구할 수 없습니다.`, async () => {
+    const { error } = await sb.from('events').delete().eq('id', eid);
+    if (error) { showToast('삭제 실패: ' + error.message); return; }
+    closeModal('detailModal');
+    await refreshAllData();
+    showToast('일정이 삭제되었습니다');
+  });
+}
+
+async function saveMemberEdit() {
+  const m = members.find(x => x.id === editingMemberId);
+  if (!m) return;
+  const name = document.getElementById('meName').value.trim();
+  const bday = document.getElementById('meBday').value;
+  if (!name) { showToast('이름은 필수입니다'); return; }
+  if (!bday) { showToast('생년월일은 필수입니다'); return; }
+  if (editGenres.size === 0) { showToast('장르를 1개 이상 선택해주세요'); return; }
+  if (!editColor) { showToast('색상을 선택해주세요'); return; }
+
+  confirmAction('정보 수정', `${m.name}님의 정보를 저장할까요?`, async () => {
+    const { error } = await sb.from('members').update({
+      name,
+      bday,
+      genres: Array.from(editGenres),
+      color: editColor
+    }).eq('id', editingMemberId);
+    if (error) { showToast('저장 실패: ' + error.message); return; }
+    closeModal('memberEditModal');
+    await refreshAllData();
+    renderProfile();
+    showToast('✓ 정보가 저장되었습니다');
+  });
+}
+
+async function changePassword() {
+  const cur = document.getElementById('pwCurrent').value;
+  const nw = document.getElementById('pwNew').value;
+  const cf = document.getElementById('pwConfirm').value;
+  if (nw.length < 6) { showToast('새 비밀번호는 6자 이상이어야 합니다'); return; }
+  if (nw !== cf) { showToast('새 비밀번호 확인이 일치하지 않습니다'); return; }
+  confirmAction('비밀번호 변경', '새 비밀번호로 변경할까요?', async () => {
+    const { data, error } = await sb.rpc('change_member_password', {
+      p_member_id: currentUser.id,
+      p_current_password: cur,
+      p_new_password: nw
+    });
+    if (error || !data?.ok) { showToast(error?.message || data?.message || '비밀번호 변경 실패'); return; }
+    closeModal('pwChangeModal');
+    showToast('✓ 비밀번호가 변경되었습니다');
+  });
+}
+
+async function resetPassword(id) {
+  if (!isAdmin()) return;
+  const m = members.find(x => x.id === id);
+  if (!m) return;
+  confirmAction('비밀번호 초기화', `${m.name}님의 비밀번호를
+생년월일 6자리로
+초기화할까요?`, async () => {
+    const { data, error } = await sb.rpc('reset_member_password', { p_member_id: id });
+    if (error || !data?.ok) { showToast(error?.message || data?.message || '초기화 실패'); return; }
+    showToast(`✓ ${m.name} 비밀번호 초기화 (${data.initial_pw})`);
+    closeModal('memberDetailModal');
+  });
+}
+
+async function toggleAdmin(id, el) {
+  if (!isLeader()) return;
+  const m = members.find(x => x.id === id);
+  if (!m) return;
+  const willBeAdmin = m.role !== 'admin';
+  const action = willBeAdmin ? '부여' : '회수';
+  confirmAction('관리자 권한 ' + action, `${m.name}님에게
+관리자 권한을 ${action}할까요?`, async () => {
+    const { error } = await sb.from('members').update({ role: willBeAdmin ? 'admin' : 'member' }).eq('id', id);
+    if (error) { showToast('권한 변경 실패: ' + error.message); return; }
+    await refreshAllData();
+    closeModal('memberDetailModal');
+    showToast(`✓ ${m.name}님 관리자 권한 ${action}`);
+  });
+}
+
+async function kickMember(id) {
+  if (!isLeader()) return;
+  const m = members.find(x => x.id === id);
+  if (!m) return;
+  confirmAction('크루에서 내보내기', `${m.name}님을
+크루에서 내보낼까요?
+
+복구하려면 다시 가입 신청을
+받아야 합니다.`, async () => {
+    const { error } = await sb.from('members').delete().eq('id', id);
+    if (error) { showToast('삭제 실패: ' + error.message); return; }
+    closeModal('memberDetailModal');
+    await refreshAllData();
+    showToast(`${m.name}님이 크루에서 제외되었습니다`);
+  });
+}
+
+async function handleApplication(appId, action) {
+  const app = pendingApplications.find(a => a.id === appId);
+  if (!app) return;
+  if (action === 'approve') {
+    const ymd = app.bday.split('-');
+    const initialPw = ymd[0].slice(2) + ymd[1] + ymd[2];
+    confirmAction('가입 승인', `${app.name}님을 크루 멤버로 승인할까요?
+초기 비밀번호: ${initialPw}`, async () => {
+      const { data, error } = await sb.rpc('approve_application', { p_app_id: appId });
+      if (error || !data?.ok) { showToast(error?.message || data?.message || '승인 실패'); return; }
+      await refreshAllData();
+      if (pendingApplications.length === 0) closeModal('approvalModal');
+      else showApproval();
+      showToast(`✓ ${app.name}님 합류 (초기 PW: ${initialPw})`);
+    });
+  } else {
+    confirmAction('가입 거절', `${app.name}님의
+가입 신청을 거절할까요?`, async () => {
+      const { data, error } = await sb.rpc('reject_application', { p_app_id: appId });
+      if (error || !data?.ok) { showToast(error?.message || data?.message || '거절 실패'); return; }
+      await refreshAllData();
+      if (pendingApplications.length === 0) closeModal('approvalModal');
+      else showApproval();
+      showToast(`${app.name}님 신청을 거절했습니다`);
+    });
+  }
+}
+
+async function saveType() {
+  const name = document.getElementById('taName').value.trim();
+  if (!name) { showToast('타입 이름을 입력해주세요'); return; }
+  if (!typeAddColor) { showToast('색상을 선택해주세요'); return; }
+  if (eventTypes.some(t => t.name === name)) { showToast('이미 존재하는 타입 이름입니다'); return; }
+  confirmAction('타입 추가', `"${name}" 타입을 추가할까요?`, async () => {
+    const id = 't' + Date.now();
+    const { error } = await sb.from('event_types').insert({ id, name, color: typeAddColor });
+    if (error) { showToast('추가 실패: ' + error.message); return; }
+    closeModal('typeAddModal');
+    await refreshAllData();
+    showToast('✓ 새 타입이 추가되었습니다');
+  });
+}
+
+async function deleteType(tid) {
+  const t = eventTypes.find(x => x.id === tid);
+  if (!t) return;
+  if (eventTypes.length <= 1) { showToast('최소 1개의 타입은 필요합니다'); return; }
+  const usedCount = events.filter(e => e.typeId === tid).length;
+  const msg = usedCount > 0
+    ? `"${t.name}" 타입을 삭제할까요?
+
+이 타입을 사용하는 일정 ${usedCount}건이
+다른 타입으로 자동 변경됩니다.`
+    : `"${t.name}" 타입을 삭제할까요?`;
+  confirmAction('타입 삭제', msg, async () => {
+    const fallbackId = eventTypes.find(x => x.id !== tid).id;
+    if (usedCount > 0) {
+      const { error: upErr } = await sb.from('events').update({ type_id: fallbackId }).eq('type_id', tid);
+      if (upErr) { showToast('일정 타입 변경 실패: ' + upErr.message); return; }
+    }
+    const { error } = await sb.from('event_types').delete().eq('id', tid);
+    if (error) { showToast('삭제 실패: ' + error.message); return; }
+    await refreshAllData();
+    showToast('타입이 삭제되었습니다');
+  });
+}
+
+async function saveEvent() {
+  const title = document.getElementById('evTitle').value.trim();
+  if (!title) { showToast('일정 제목을 입력해주세요'); return; }
+  const date = document.getElementById('evDate').value;
+  const startTime = document.getElementById('evStart').value;
+  const endTime = document.getElementById('evEnd').value;
+  if (!date || !startTime || !endTime) { showToast('날짜와 시간을 입력해주세요'); return; }
+  if (endTime <= startTime) { showToast('종료 시간은 시작 시간보다 늦어야 합니다'); return; }
+  const location = document.getElementById('evLocation').value.trim() || '미정';
+  const memo = document.getElementById('evMemo').value.trim();
+  const attendance = {};
+  document.querySelectorAll('#memberToggle .member-chip').forEach(el => {
+    const mid = parseInt(el.dataset.mid, 10);
+    if (el.dataset.mode !== 'none') attendance[mid] = { mode: el.dataset.mode, status: 'pending' };
+  });
+
+  const t = getType(currentTypeId);
+  confirmAction('일정 등록', `${t.name} · ${title}
+${date.replace(/-/g, '.')} ${startTime} - ${endTime}
+
+위 일정을 등록할까요?`, async () => {
+    const { error } = await sb.from('events').insert({
+      type_id: currentTypeId,
+      title,
+      event_date: date,
+      start_time: startTime,
+      end_time: endTime,
+      location,
+      memo,
+      attendance
+    });
+    if (error) { showToast('등록 실패: ' + error.message); return; }
+    closeModal('eventModal');
+    selectedDate = new Date(date);
+    viewYear = selectedDate.getFullYear();
+    viewMonth = selectedDate.getMonth();
+    await refreshAllData();
+    showToast('✓ 일정이 등록되었습니다');
+  });
+}
+
+// 시작 시 Supabase 데이터 불러오기
+refreshAllData();
+// ====== SUPABASE 연결 코드 끝 ======
+
+document.getElementById('loginPw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+function closeAllDropdowns() {
+  document.querySelectorAll('.dropdown.open').forEach(dd => dd.classList.remove('open'));
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.dropdown')) closeAllDropdowns();
+});
+</script>
+</body>
+</html>
